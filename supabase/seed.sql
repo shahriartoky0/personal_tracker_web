@@ -1,0 +1,3 @@
+-- Default categories, a Cash account and reminder preferences are created per user
+-- by the public.handle_new_user() trigger (see migrations/20261101000000_initial_schema.sql).
+-- There is no global seed data. Demo data lives client-side and is never written to the database.
