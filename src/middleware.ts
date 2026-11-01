@@ -5,10 +5,18 @@ const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth", "/demo",
 
 /** Refreshes the Supabase session cookie and redirects signed-out visitors to /login. */
 export async function middleware(request: NextRequest) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !anonKey) {
+    // Misconfigured deployment: keep public pages alive and explain, instead of a blanket 500.
+    const p = request.nextUrl.pathname
+    if (PUBLIC_PATHS.some((x) => p === x || p.startsWith(`${x}/`))) return NextResponse.next()
+    return new NextResponse("Setup incomplete: set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in the hosting environment variables, then redeploy.", { status: 503 })
+  }
   let response = NextResponse.next({ request })
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    anonKey,
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
