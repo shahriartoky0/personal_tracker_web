@@ -270,13 +270,15 @@ export function SettingsView({ reminders, today }: { reminders: ReminderPreferen
     <div className="flex flex-col gap-5">
       <h1 className="text-title">Settings</h1>
       <Tabs defaultValue="profile" className="gap-5">
-        <TabsList className="h-auto w-full flex-wrap justify-start">
-          <TabsTrigger value="profile" className="tap">Profile</TabsTrigger>
-          <TabsTrigger value="accounts" className="tap">Accounts</TabsTrigger>
-          <TabsTrigger value="categories" className="tap">Categories</TabsTrigger>
-          <TabsTrigger value="reminders" className="tap">Reminders</TabsTrigger>
-          <TabsTrigger value="data" className="tap">Data &amp; security</TabsTrigger>
+        <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+        <TabsList className="group-data-[orientation=horizontal]/tabs:h-12 w-max min-w-full justify-start gap-1 sm:w-fit">
+          <TabsTrigger value="profile" className="tap flex-none px-4">Profile</TabsTrigger>
+          <TabsTrigger value="accounts" className="tap flex-none px-4">Accounts</TabsTrigger>
+          <TabsTrigger value="categories" className="tap flex-none px-4">Categories</TabsTrigger>
+          <TabsTrigger value="reminders" className="tap flex-none px-4">Reminders</TabsTrigger>
+          <TabsTrigger value="data" className="tap flex-none px-4">Data &amp; security</TabsTrigger>
         </TabsList>
+        </div>
         <TabsContent value="profile"><ProfileTab /></TabsContent>
         <TabsContent value="accounts"><AccountsTab /></TabsContent>
         <TabsContent value="categories"><CategoriesTab /></TabsContent>
