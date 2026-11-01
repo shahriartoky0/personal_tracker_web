@@ -7,7 +7,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     c.settings.profile.execute(),
     c.accounts.list.execute({ includeArchived: true }),
     c.categories.list.execute({ includeArchived: true }),
-    c.transfers.payees.execute({ includeArchived: true }),
+    // The people list is only a convenience (suggestions, names); never let it take the whole app down.
+    c.transfers.payees.execute({ includeArchived: true }).catch((e) => {
+      console.error("[layout] payees unavailable - is the person_transfers migration applied?", e)
+      return []
+    }),
   ])
   return (
     <AppShell
