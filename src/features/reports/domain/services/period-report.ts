@@ -20,6 +20,8 @@ import {
   totalExpenses,
   totalIncome,
   totalPlannedExpenses,
+  totalReceivedFromPeople,
+  totalSentToPeople,
   totalUnplanned,
 } from "@/features/transactions/domain/services/transaction-calculator"
 import type { DailyBudget } from "@/features/budgets/domain/entities/budget"
@@ -60,6 +62,9 @@ export interface PeriodReport {
   net: Minor
   /** Money moved between own accounts — shown for transparency, excluded from every figure above. */
   transfersExcluded: Minor
+  /** Money sent to / received from people: tracked on the Transfers screen, excluded from income and expenses, included in balances. */
+  sentToPeople: Minor
+  receivedFromPeople: Minor
   plannedSpent: Minor
   unplannedSpent: Minor
   unplannedCount: number
@@ -184,6 +189,8 @@ export function buildPeriodReport(input: PeriodReportInput): PeriodReport {
     expenses,
     net: income - expenses,
     transfersExcluded: sumMinor(inPeriodAll.filter((t) => isTransfer(t) && t.transferDirection === "out").map((t) => t.amount)),
+    sentToPeople: totalSentToPeople(inPeriodAll),
+    receivedFromPeople: totalReceivedFromPeople(inPeriodAll),
     plannedSpent: totalPlannedExpenses(flow),
     unplannedSpent: totalUnplanned(flow),
     unplannedCount: flow.filter((t) => isExpense(t) && t.plannedStatus === "unplanned").length,

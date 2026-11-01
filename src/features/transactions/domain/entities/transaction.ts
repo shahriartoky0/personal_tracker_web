@@ -1,7 +1,8 @@
 import type { Minor } from "@/shared/domain/money"
 import type { Instant } from "@/shared/domain/dates"
 
-export type TransactionType = "income" | "expense" | "transfer"
+/** `transfer` = between own accounts; `person_transfer` = money sent to / received from a person. */
+export type TransactionType = "income" | "expense" | "transfer" | "person_transfer"
 export type PlannedStatus = "planned" | "unplanned"
 export type TransferDirection = "in" | "out"
 
@@ -12,6 +13,8 @@ export interface Transaction {
   type: TransactionType
   transferDirection: TransferDirection | null
   transferGroupId: string | null
+  /** Set only for person transfers. */
+  payeeId: string | null
   /** Always positive; the sign is implied by `type` / `transferDirection`. */
   amount: Minor
   occurredAt: Instant
@@ -41,8 +44,19 @@ export interface NewTransfer {
   note?: string | null
 }
 
+export interface NewPersonTransfer {
+  accountId: string
+  payeeId: string
+  /** out = I sent money, in = I received money. */
+  direction: TransferDirection
+  amount: Minor
+  occurredAt: Instant
+  note?: string | null
+  receiptPath?: string | null
+}
+
 export type TransactionPatch = Partial<
-  Pick<Transaction, "accountId" | "categoryId" | "amount" | "occurredAt" | "merchant" | "note" | "plannedStatus" | "receiptPath">
+  Pick<Transaction, "accountId" | "payeeId" | "transferDirection" | "categoryId" | "amount" | "occurredAt" | "merchant" | "note" | "plannedStatus" | "receiptPath">
 >
 
 export interface TransactionFilter {
@@ -54,5 +68,6 @@ export interface TransactionFilter {
   accountId?: string
   plannedStatus?: PlannedStatus
   type?: TransactionType
+  payeeId?: string
   search?: string
 }

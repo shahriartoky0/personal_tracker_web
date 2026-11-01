@@ -83,6 +83,22 @@ describe.skipIf(!enabled)("RLS: user isolation", () => {
     expect(r.error).not.toBeNull()
   })
 
+  it("people transfers: B cannot see A's payees or use them", async () => {
+    const p = await a.from("payees").insert({ user_id: aId, name: `RLS test ${Date.now()}` }).select("id").single()
+    expect(p.error).toBeNull()
+    const payeeId = p.data!.id
+    expect((await b.from("payees").select("id").eq("id", payeeId)).data).toHaveLength(0)
+    const bAcc = (await b.from("accounts").select("id").limit(1).single()).data!.id
+    const cross = await b.from("transactions").insert({ user_id: bId, account_id: bAcc, payee_id: payeeId, type: "person_transfer", transfer_direction: "out", amount: 1 })
+    expect(cross.error).not.toBeNull() // composite FK (payee_id, user_id)
+    const own = await a.from("transactions").insert({ user_id: aId, account_id: aAccount, payee_id: payeeId, type: "person_transfer", transfer_direction: "out", amount: 5 }).select("id").single()
+    expect(own.error).toBeNull()
+    const bad = await a.from("transactions").insert({ user_id: aId, account_id: aAccount, payee_id: payeeId, category_id: aCategory, type: "person_transfer", transfer_direction: "out", amount: 5 })
+    expect(bad.error).not.toBeNull() // shape check: no category on a person transfer
+    await a.from("transactions").delete().eq("id", own.data!.id)
+    await a.from("payees").delete().eq("id", payeeId)
+  })
+
   it("unauthenticated requests see nothing and cannot write", async () => {
     for (const t of ["accounts", "categories", "transactions", "profiles", "daily_budgets"]) {
       const { data } = await anon.from(t).select("*")

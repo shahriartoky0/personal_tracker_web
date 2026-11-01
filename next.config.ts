@@ -1,7 +1,10 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  experimental: {
+    // Proof images are compressed in the browser (<~1 MB); this leaves headroom. Hosting caps still apply (Vercel: 4.5 MB).
+    serverActions: { bodySizeLimit: "5mb" },
+  },
+}
 
-export default nextConfig;
+export default nextConfig

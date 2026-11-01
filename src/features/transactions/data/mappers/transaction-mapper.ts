@@ -1,7 +1,7 @@
 import type { Transaction, TransactionType } from "../../domain/entities/transaction"
 import type { TransactionRow } from "../dto/transaction-dto"
 
-const TYPES: readonly TransactionType[] = ["income", "expense", "transfer"]
+const TYPES: readonly TransactionType[] = ["income", "expense", "transfer", "person_transfer"]
 
 export function toTransaction(row: TransactionRow): Transaction {
   const type = TYPES.find((t) => t === row.type)
@@ -13,6 +13,7 @@ export function toTransaction(row: TransactionRow): Transaction {
     type,
     transferDirection: row.transfer_direction === "in" ? "in" : row.transfer_direction === "out" ? "out" : null,
     transferGroupId: row.transfer_group_id,
+    payeeId: row.payee_id ?? null,
     amount: Number(row.amount),
     occurredAt: new Date(row.occurred_at).toISOString(),
     merchant: row.merchant,

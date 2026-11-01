@@ -1,5 +1,6 @@
 "use client"
 
+import { SelectField } from "@/components/layout/select-field"
 import { useMemo, useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -313,9 +314,7 @@ export function PlanView({ date, today, budget, summary, planned }: Props) {
               <div className="grid gap-2 border-t pt-4 sm:grid-cols-[1fr_7rem]">
                 <Input aria-label="Planned expense title" placeholder="e.g. Rickshaw to office" value={pTitle} onChange={(e) => setPTitle(e.target.value)} maxLength={120} className="tap" />
                 <Input aria-label="Expected amount" inputMode="decimal" placeholder="Amount" value={pAmount} onChange={(e) => setPAmount(e.target.value)} className="num tap" />
-                <select aria-label="Category" className="tap rounded-md border bg-background px-3 text-sm sm:col-span-2" value={pCat} onChange={(e) => setPCat(e.target.value)}>
-                  {expenseCats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <SelectField label="Category" className="sm:col-span-2" value={pCat} onChange={setPCat} options={expenseCats.map((c) => ({ value: c.id, label: c.name }))} />
                 {pErr && <p role="alert" className="text-caption text-destructive sm:col-span-2">{pErr}</p>}
                 <Button variant="secondary" className="tap sm:col-span-2" disabled={pending || !pTitle || !pAmount} onClick={addPlanned}>
                   <Plus aria-hidden /> Add planned expense

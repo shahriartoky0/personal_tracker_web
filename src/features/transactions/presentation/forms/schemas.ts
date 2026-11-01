@@ -53,5 +53,7 @@ export const exportSchema = z.object({
   categoryId: z.string().optional(),
   accountId: z.string().optional(),
   plannedStatus: z.enum(["planned", "unplanned"]).optional(),
+  type: z.enum(["income", "expense", "transfer", "person_transfer"]).optional(),
+  payeeId: z.string().optional(),
   search: z.string().max(100).optional(),
 })

@@ -2,6 +2,7 @@ import { fail, notFound, ok, validation, type Result } from "@/shared/domain/res
 import { isValidMinor } from "@/shared/domain/money"
 import { instantRange, isValidLocalDate, type DateRange, type LocalDate } from "@/shared/domain/dates"
 import type { AccountRepository } from "@/features/accounts/domain/repositories/account-repository"
+import type { PayeeRepository, ProofStorage } from "@/features/transfers/domain/repositories/transfer-ports"
 import type { CategoryRepository } from "@/features/categories/domain/repositories/category-repository"
 import type {
   NewTransaction,
@@ -19,6 +20,7 @@ export interface TransactionDeps {
   transactions: TransactionRepository
   accounts: AccountRepository
   categories: CategoryRepository
+  payees: PayeeRepository
 }
 
 function validateCommon(input: { amount?: number; occurredAt?: string; note?: string | null; merchant?: string | null }) {
@@ -106,12 +108,13 @@ export class UpdateTransaction {
     if (!existing) return notFound("Transaction")
     if (existing.type === "transfer")
       return fail("conflict", "Transfers can't be edited. Delete it and create a new one.")
+    if (existing.type === "person_transfer") return fail("conflict", "Edit this from the Transfers screen.")
     const errors = {
       ...validateCommon(patch),
       ...(await checkRefs(this.deps, {
         accountId: patch.accountId,
         categoryId: patch.categoryId ?? undefined,
-        categoryType: existing.type,
+        categoryType: existing.type === "income" ? "income" : "expense",
       })),
     }
     if (Object.keys(errors).length) return validation("Please fix the highlighted fields.", errors)
@@ -125,9 +128,16 @@ export class UpdateTransaction {
 }
 
 export class DeleteTransaction {
-  constructor(private readonly transactions: TransactionRepository) {}
+  constructor(
+    private readonly transactions: TransactionRepository,
+    private readonly proofs?: ProofStorage,
+  ) {}
   async execute(id: string): Promise<Result<true>> {
-    return (await this.transactions.delete(id)) ? ok(true) : notFound("Transaction")
+    const existing = await this.transactions.getById(id)
+    if (!(await this.transactions.delete(id))) return notFound("Transaction")
+    // Don't leave an orphaned proof image behind.
+    if (existing?.receiptPath && this.proofs) await this.proofs.remove(existing.receiptPath).catch(() => {})
+    return ok(true)
   }
 }
 
@@ -136,7 +146,7 @@ export class DuplicateTransaction {
   async execute(id: string, occurredAt: string): Promise<Result<Transaction>> {
     const t = await this.deps.transactions.getById(id)
     if (!t) return notFound("Transaction")
-    if (t.type === "transfer" || !t.categoryId) return fail("conflict", "Transfers can't be duplicated.")
+    if (t.type === "transfer" || t.type === "person_transfer" || !t.categoryId) return fail("conflict", "Transfers can't be duplicated.")
     return createTyped(this.deps, {
       accountId: t.accountId,
       categoryId: t.categoryId,
@@ -156,6 +166,7 @@ export interface TransactionQuery {
   accountId?: string
   plannedStatus?: PlannedStatus
   type?: TransactionType
+  payeeId?: string
   search?: string
 }
 
@@ -165,6 +176,7 @@ export function toRepositoryFilter(q: TransactionQuery, timezone: string): Resul
     accountId: q.accountId,
     plannedStatus: q.plannedStatus,
     type: q.type,
+    payeeId: q.payeeId,
     search: q.search?.trim() || undefined,
   }
   if (q.range) {
@@ -192,11 +204,13 @@ export class ExportTransactions {
   async execute(query: TransactionQuery, timezone: string): Promise<Result<string>> {
     const filter = toRepositoryFilter(query, timezone)
     if (!filter.ok) return filter
-    const [txs, accounts, categories] = await Promise.all([
+    const [txs, accounts, categories, payees] = await Promise.all([
       this.deps.transactions.list(filter.value),
       this.deps.accounts.list(),
       this.deps.categories.list(),
+      this.deps.payees.list(),
     ])
+    const payeeNames = new Map(payees.map((p) => [p.id, p.name]))
     const accountNames = new Map(accounts.map((a) => [a.id, a.name]))
     const categoryNames = new Map(categories.map((c) => [c.id, c.name]))
     // CSV is chronological, oldest first.
@@ -206,6 +220,7 @@ export class ExportTransactions {
         timezone,
         accountName: (id) => accountNames.get(id) ?? "",
         categoryName: (id) => (id ? (categoryNames.get(id) ?? "") : ""),
+        payeeName: (id) => (id ? (payeeNames.get(id) ?? "") : ""),
       }),
     )
   }

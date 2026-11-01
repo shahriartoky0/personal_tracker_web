@@ -16,7 +16,7 @@ const NOON = "2025-03-10T06:00:00Z"
 
 function setup() {
   const w = seedWorld()
-  const deps = { transactions: w.transactions, accounts: w.accounts, categories: w.categories }
+  const deps = { transactions: w.transactions, accounts: w.accounts, categories: w.categories, payees: w.payees }
   return {
     ...w,
     deps,
@@ -218,15 +218,15 @@ describe("filtering & export", () => {
     const r = await new ExportTransactions(w.deps).execute({ range: { from: "2025-03-10", to: "2025-03-12" } }, TZ)
     if (!r.ok) throw new Error()
     const lines = r.value.trim().split("\r\n")
-    expect(lines[0]).toBe("Date,Time,Type,Amount,Category,Account,Planned,Merchant,Note,Transfer group")
-    expect(lines[1]).toBe("2025-03-10,12:00,expense,-100.00,Food,Cash,planned,Cafe,,")
-    expect(lines[3]).toBe("2025-03-12,12:00,income,900.00,Salary,Bank,,,,")
+    expect(lines[0]).toBe("Date,Time,Type,Amount,Category,Account,Planned,Person,Merchant,Note,Transfer group")
+    expect(lines[1]).toBe("2025-03-10,12:00,expense,-100.00,Food,Cash,planned,,Cafe,,")
+    expect(lines[3]).toBe("2025-03-12,12:00,income,900.00,Salary,Bank,,,,,")
     expect(lines).toHaveLength(4)
   })
   it("escapes quotes/commas and neutralises formula injection", () => {
     const csv = transactionsToCsv(
-      [{ id: "1", accountId: "a", categoryId: "c", type: "expense", transferDirection: null, transferGroupId: null, amount: 100, occurredAt: NOON, merchant: '=HYPERLINK("x")', note: 'a,"b"', plannedStatus: "unplanned", receiptPath: null }],
-      { timezone: TZ, accountName: () => "A", categoryName: () => "C" },
+      [{ id: "1", accountId: "a", categoryId: "c", type: "expense", transferDirection: null, transferGroupId: null, payeeId: null, amount: 100, occurredAt: NOON, merchant: '=HYPERLINK("x")', note: 'a,"b"', plannedStatus: "unplanned", receiptPath: null }],
+      { timezone: TZ, accountName: () => "A", categoryName: () => "C", payeeName: () => "" },
     )
     expect(csv).toContain(`"'=HYPERLINK(""x"")"`)
     expect(csv).toContain(`"a,""b"""`)

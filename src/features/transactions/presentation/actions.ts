@@ -132,6 +132,8 @@ export async function exportTransactionsAction(input: unknown): Promise<ActionRe
         categoryId: v.categoryId || undefined,
         accountId: v.accountId || undefined,
         plannedStatus: v.plannedStatus,
+        type: v.type,
+        payeeId: v.payeeId || undefined,
         search: v.search,
       },
       profile.timezone,

@@ -1,5 +1,6 @@
 import type {
   NewTransaction,
+  NewPersonTransfer,
   NewTransfer,
   Transaction,
   TransactionFilter,
@@ -11,6 +12,7 @@ export interface TransactionRepository {
   list(filter?: TransactionFilter): Promise<Transaction[]>
   getById(id: string): Promise<Transaction | null>
   create(input: NewTransaction): Promise<Transaction>
+  createPersonTransfer(input: NewPersonTransfer): Promise<Transaction>
   /** Atomically creates the linked out/in pair and returns the shared group id. */
   createTransfer(input: NewTransfer): Promise<string>
   update(id: string, patch: TransactionPatch): Promise<Transaction | null>

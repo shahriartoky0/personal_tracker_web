@@ -4,16 +4,21 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Segmented } from "@/components/layout/segmented"
 import { useMediaQuery } from "@/shared/lib/use-media-query"
+import { PersonTransferForm } from "@/features/transfers/presentation/components/person-transfer-form"
 import type { Transaction } from "../../domain/entities/transaction"
 import { TransactionForm } from "./transaction-form"
 import { TransferForm } from "./transfer-form"
 
 type Mode = "expense" | "income" | "transfer"
+type TransferKind = "own" | "person"
 
 interface QuickAddApi {
   openExpense: () => void
   openIncome: () => void
+  /** Between the user's own accounts. */
   openTransfer: () => void
+  /** Money sent to / received from a person. */
+  openPersonTransfer: () => void
   openEdit: (t: Transaction) => void
 }
 
@@ -29,12 +34,14 @@ export function useQuickAdd() {
 export function QuickAddProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<Mode>("expense")
+  const [kind, setKind] = useState<TransferKind>("person")
   const [editing, setEditing] = useState<Transaction | undefined>()
   const [nonce, setNonce] = useState(0) // remounts the form so defaults (e.g. "now") are fresh
   const desktop = useMediaQuery("(min-width: 768px)")
 
-  const launch = useCallback((m: Mode, t?: Transaction) => {
+  const launch = useCallback((m: Mode, k: TransferKind = "own", t?: Transaction) => {
     setMode(m)
+    setKind(k)
     setEditing(t)
     setNonce((n) => n + 1)
     setOpen(true)
@@ -44,14 +51,27 @@ export function QuickAddProvider({ children }: { children: ReactNode }) {
     () => ({
       openExpense: () => launch("expense"),
       openIncome: () => launch("income"),
-      openTransfer: () => launch("transfer"),
-      openEdit: (t) => launch(t.type === "income" ? "income" : "expense", t),
+      openTransfer: () => launch("transfer", "own"),
+      openPersonTransfer: () => launch("transfer", "person"),
+      openEdit: (t) =>
+        t.type === "person_transfer" ? launch("transfer", "person", t) : launch(t.type === "income" ? "income" : "expense", "own", t),
     }),
     [launch],
   )
 
   const close = () => setOpen(false)
-  const title = editing ? "Edit transaction" : mode === "expense" ? "Add expense" : mode === "income" ? "Add income" : "Transfer money"
+  const personMode = mode === "transfer" && kind === "person"
+  const title = editing
+    ? personMode
+      ? "Edit transfer"
+      : "Edit transaction"
+    : mode === "expense"
+      ? "Add expense"
+      : mode === "income"
+        ? "Add income"
+        : personMode
+          ? "Send or receive money"
+          : "Move between my accounts"
 
   return (
     <Ctx.Provider value={api}>
@@ -64,12 +84,16 @@ export function QuickAddProvider({ children }: { children: ReactNode }) {
           <SheetHeader className="border-b p-4 text-left">
             <SheetTitle>{title}</SheetTitle>
             <SheetDescription>
-              {mode === "transfer" ? "Between your own accounts." : "Amount first — everything else is optional."}
+              {mode === "transfer"
+                ? personMode
+                  ? "To or from a person — tracked separately."
+                  : "Between your own accounts."
+                : "Amount first — everything else is optional."}
             </SheetDescription>
           </SheetHeader>
           <div className="overflow-y-auto overscroll-contain p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
             {!editing && (
-              <div className="mb-5">
+              <div className="mb-5 flex flex-col gap-3">
                 <Segmented
                   label="What are you recording?"
                   value={mode}
@@ -83,10 +107,28 @@ export function QuickAddProvider({ children }: { children: ReactNode }) {
                     { value: "transfer", label: "Transfer" },
                   ]}
                 />
+                {mode === "transfer" && (
+                  <Segmented
+                    label="Transfer type"
+                    value={kind}
+                    onChange={(k) => {
+                      setKind(k)
+                      setNonce((n) => n + 1)
+                    }}
+                    options={[
+                      { value: "person", label: "With a person" },
+                      { value: "own", label: "My accounts" },
+                    ]}
+                  />
+                )}
               </div>
             )}
             {mode === "transfer" ? (
-              <TransferForm key={nonce} onDone={close} />
+              personMode ? (
+                <PersonTransferForm key={nonce} initial={editing} onDone={close} />
+              ) : (
+                <TransferForm key={nonce} onDone={close} />
+              )
             ) : (
               <TransactionForm key={nonce} type={mode} initial={editing} onDone={close} />
             )}

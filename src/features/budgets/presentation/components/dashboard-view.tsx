@@ -43,6 +43,17 @@ export function DashboardView({ summary }: { summary: DashboardSummary }) {
           <Stat label="Net this month" value={money(summary.monthNet, { showPlus: true })} tone={summary.monthNet < 0 ? "text-destructive" : "text-success"} />
           <Stat label="Income this month" value={money(summary.monthIncome)} />
           <Stat label="Spent this month" value={money(summary.monthExpenses)} />
+          {summary.monthSentToPeople > 0 &&
+            (demo ? (
+              <Stat label="Sent to people" value={money(summary.monthSentToPeople)} />
+            ) : (
+              <Link href="/transfers" className="col-span-2 block rounded-xl">
+                <Card className="gap-1 p-4 transition-colors hover:bg-muted/60">
+                  <p className="text-label text-muted-foreground">Sent to people this month · not in spending</p>
+                  <p className="num text-value">{money(summary.monthSentToPeople)}</p>
+                </Card>
+              </Link>
+            ))}
           {!demo && (
             <Button variant="outline" onClick={openIncome} className="tap col-span-2">
               <Plus aria-hidden /> Add Income

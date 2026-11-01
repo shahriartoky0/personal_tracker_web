@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
-import { ArrowLeftRight, Copy, MoreVertical, Pencil, Trash2 } from "lucide-react"
+import { ArrowLeftRight, Copy, MoreVertical, Pencil, Trash2, UserRound } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -26,6 +26,7 @@ import { dayLabel, formatTime } from "@/shared/lib/format"
 import { groupByLocalDate, totalExpenses } from "../../domain/services/transaction-calculator"
 import type { Transaction } from "../../domain/entities/transaction"
 import { deleteTransactionAction, duplicateTransactionAction } from "../actions"
+import { ProofButton } from "@/features/transfers/presentation/components/proof-viewer"
 import { useQuickAdd } from "./quick-add"
 
 function useRowInfo() {
@@ -34,14 +35,21 @@ function useRowInfo() {
     const cat = app.categoryById(t.categoryId)
     const acc = app.accountById(t.accountId)
     const isTransfer = t.type === "transfer"
-    const title = isTransfer
+    const isPerson = t.type === "person_transfer"
+    const person = app.payeeById(t.payeeId)?.name ?? "someone"
+    const title = isPerson
       ? t.transferDirection === "out"
-        ? "Transfer out"
-        : "Transfer in"
-      : t.merchant || cat?.name || "Transaction"
-    const signed = t.type === "income" || (isTransfer && t.transferDirection === "in") ? t.amount : -t.amount
-    const sub = [isTransfer ? null : t.merchant ? cat?.name : null, t.note].filter(Boolean).join(" · ")
-    return { cat, acc, isTransfer, title, signed, sub }
+        ? `Sent to ${person}`
+        : `Received from ${person}`
+      : isTransfer
+        ? t.transferDirection === "out"
+          ? "Transfer out"
+          : "Transfer in"
+        : t.merchant || cat?.name || "Transaction"
+    const inflow = t.type === "income" || ((isTransfer || isPerson) && t.transferDirection === "in")
+    const signed = inflow ? t.amount : -t.amount
+    const sub = [isTransfer || isPerson ? null : t.merchant ? cat?.name : null, t.note].filter(Boolean).join(" · ")
+    return { cat, acc, isTransfer, isPerson, title, signed, sub }
   }
 }
 
@@ -52,7 +60,7 @@ function AmountText({ minor, type }: { minor: number; type: Transaction["type"] 
     <span
       className={cn(
         "num whitespace-nowrap font-semibold",
-        type === "income" && "text-success",
+        (type === "income" || (type === "person_transfer" && minor > 0)) && "text-success",
         type === "transfer" && "text-muted-foreground",
       )}
     >
@@ -66,6 +74,12 @@ function StatusBadge({ t }: { t: Transaction }) {
     return (
       <Badge variant="outline" className="gap-1">
         <ArrowLeftRight className="size-3" aria-hidden /> Transfer
+      </Badge>
+    )
+  if (t.type === "person_transfer")
+    return (
+      <Badge variant="outline" className="gap-1">
+        <UserRound className="size-3" aria-hidden /> {t.transferDirection === "out" ? "Sent" : "Received"}
       </Badge>
     )
   if (t.type === "income") return <Badge variant="secondary">Income</Badge>
@@ -94,7 +108,7 @@ function RowMenu({ t, onDelete }: { t: Transaction; onDelete: (t: Transaction) =
             <Pencil aria-hidden /> Edit
           </DropdownMenuItem>
         )}
-        {t.type !== "transfer" && (
+        {t.type !== "transfer" && t.type !== "person_transfer" && (
           <DropdownMenuItem
             onSelect={() =>
               start(async () => {
@@ -164,7 +178,7 @@ export function TransactionList({
               return (
                 <li key={t.id} className="flex items-center gap-3 p-3">
                   <span className="grid size-10 shrink-0 place-items-center rounded-full bg-muted">
-                    {r.isTransfer ? <ArrowLeftRight className="size-4" aria-hidden /> : <CategoryIcon name={r.cat?.icon ?? null} color={r.cat?.color} className="size-4" />}
+                    {r.isPerson ? <UserRound className="size-4" aria-hidden /> : r.isTransfer ? <ArrowLeftRight className="size-4" aria-hidden /> : <CategoryIcon name={r.cat?.icon ?? null} color={r.cat?.color} className="size-4" />}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{r.title}</p>
@@ -172,7 +186,7 @@ export function TransactionList({
                       {r.acc?.name} · {formatTime(t.occurredAt, app.timezone)}
                       {r.sub ? ` · ${r.sub}` : ""}
                     </p>
-                    <div className="mt-1"><StatusBadge t={t} /></div>
+                    <div className="mt-1 flex flex-wrap items-center gap-1"><StatusBadge t={t} />{t.receiptPath && <ProofButton path={t.receiptPath} />}</div>
                   </div>
                   <AmountText minor={r.signed} type={t.type} />
                   <RowMenu t={t} onDelete={setToDelete} />
@@ -202,7 +216,7 @@ export function TransactionList({
                       <TableCell className="num text-muted-foreground">{formatTime(t.occurredAt, app.timezone)}</TableCell>
                       <TableCell className="max-w-[18rem]">
                         <div className="flex items-center gap-2">
-                          {r.isTransfer ? <ArrowLeftRight className="size-4 shrink-0" aria-hidden /> : <CategoryIcon name={r.cat?.icon ?? null} color={r.cat?.color} className="size-4 shrink-0" />}
+                          {r.isPerson ? <UserRound className="size-4 shrink-0" aria-hidden /> : r.isTransfer ? <ArrowLeftRight className="size-4 shrink-0" aria-hidden /> : <CategoryIcon name={r.cat?.icon ?? null} color={r.cat?.color} className="size-4 shrink-0" />}
                           <div className="min-w-0">
                             <p className="truncate font-medium">{r.title}</p>
                             {r.sub && <p className="truncate text-caption text-muted-foreground">{r.sub}</p>}
@@ -210,7 +224,9 @@ export function TransactionList({
                         </div>
                       </TableCell>
                       <TableCell>{r.acc?.name}</TableCell>
-                      <TableCell><StatusBadge t={t} /></TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap items-center gap-1"><StatusBadge t={t} />{t.receiptPath && <ProofButton path={t.receiptPath} />}</div>
+                      </TableCell>
                       <TableCell className="text-right"><AmountText minor={r.signed} type={t.type} /></TableCell>
                       <TableCell><RowMenu t={t} onDelete={setToDelete} /></TableCell>
                     </TableRow>
@@ -225,11 +241,13 @@ export function TransactionList({
       <AlertDialog open={toDelete !== null} onOpenChange={(o) => !o && setToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this {toDelete?.type === "transfer" ? "transfer" : "transaction"}?</AlertDialogTitle>
+            <AlertDialogTitle>Delete this {toDelete?.type === "transfer" || toDelete?.type === "person_transfer" ? "transfer" : "transaction"}?</AlertDialogTitle>
             <AlertDialogDescription>
               {toDelete?.type === "transfer"
                 ? "Both sides of the transfer will be removed. "
-                : ""}
+                : toDelete?.receiptPath
+                  ? "Its proof image will be deleted too. "
+                  : ""}
               This changes your balance and reports, and can&apos;t be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

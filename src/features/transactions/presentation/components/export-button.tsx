@@ -12,6 +12,8 @@ export interface ExportFilters {
   categoryId?: string
   accountId?: string
   plannedStatus?: "planned" | "unplanned"
+  type?: "income" | "expense" | "transfer" | "person_transfer"
+  payeeId?: string
   search?: string
 }
 

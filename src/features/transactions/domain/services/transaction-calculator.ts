@@ -6,6 +6,7 @@ import type { Transaction } from "../entities/transaction"
 export const isExpense = (t: Transaction) => t.type === "expense"
 export const isIncome = (t: Transaction) => t.type === "income"
 export const isTransfer = (t: Transaction) => t.type === "transfer"
+export const isPersonTransfer = (t: Transaction) => t.type === "person_transfer"
 export const isUnplannedExpense = (t: Transaction) => isExpense(t) && t.plannedStatus === "unplanned"
 
 export function totalExpenses(txs: readonly Transaction[]): Minor {
@@ -22,6 +23,16 @@ export function totalUnplanned(txs: readonly Transaction[]): Minor {
 
 export function totalPlannedExpenses(txs: readonly Transaction[]): Minor {
   return sumMinor(txs.filter((t) => isExpense(t) && t.plannedStatus === "planned").map((t) => t.amount))
+}
+
+/** Money sent to people (never counted as an expense). */
+export function totalSentToPeople(txs: readonly Transaction[]): Minor {
+  return sumMinor(txs.filter((t) => isPersonTransfer(t) && t.transferDirection === "out").map((t) => t.amount))
+}
+
+/** Money received from people (never counted as income). */
+export function totalReceivedFromPeople(txs: readonly Transaction[]): Minor {
+  return sumMinor(txs.filter((t) => isPersonTransfer(t) && t.transferDirection === "in").map((t) => t.amount))
 }
 
 /** Income − expenses; transfers excluded. */

@@ -19,6 +19,7 @@ export class TransactionDatasource {
       if (filter.categoryId) q = q.eq("category_id", filter.categoryId)
       if (filter.accountId) q = q.eq("account_id", filter.accountId)
       if (filter.type) q = q.eq("type", filter.type)
+      if (filter.payeeId) q = q.eq("payee_id", filter.payeeId)
       if (filter.plannedStatus) q = q.eq("type", "expense").eq("planned_status", filter.plannedStatus)
       const term = filter.search ? safeSearch(filter.search) : ""
       if (term) q = q.or(`merchant.ilike.%${term}%,note.ilike.%${term}%`)

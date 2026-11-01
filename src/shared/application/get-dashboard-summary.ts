@@ -19,6 +19,7 @@ import {
   onLocalDate,
   totalExpenses,
   totalIncome,
+  totalSentToPeople,
 } from "@/features/transactions/domain/services/transaction-calculator"
 
 export interface DashboardSummary {
@@ -27,6 +28,7 @@ export interface DashboardSummary {
   monthIncome: Minor
   monthExpenses: Minor
   monthNet: Minor
+  monthSentToPeople: Minor
   daily: DailySummary
   hasPlan: boolean
   todayCategorySpend: { categoryId: string; amount: Minor }[]
@@ -66,6 +68,7 @@ export class GetDashboardSummary {
       monthIncome: totalIncome(month),
       monthExpenses: totalExpenses(month),
       monthNet: netCashFlow(month),
+      monthSentToPeople: totalSentToPeople(month),
       daily: summarizeDay(budget, todayTxs, warnAtPercent),
       hasPlan: budget !== null,
       todayCategorySpend: [...expensesByCategory(todayTxs).entries()]

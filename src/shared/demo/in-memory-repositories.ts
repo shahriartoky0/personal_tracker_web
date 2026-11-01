@@ -2,7 +2,10 @@ import type { Account, NewAccount } from "@/features/accounts/domain/entities/ac
 import type { AccountRepository } from "@/features/accounts/domain/repositories/account-repository"
 import type { Category, NewCategory } from "@/features/categories/domain/entities/category"
 import type { CategoryRepository } from "@/features/categories/domain/repositories/category-repository"
+import type { Payee } from "@/features/transfers/domain/entities/payee"
+import type { PayeeRepository, ProofFile, ProofStorage } from "@/features/transfers/domain/repositories/transfer-ports"
 import type {
+  NewPersonTransfer,
   NewTransaction,
   NewTransfer,
   Transaction,
@@ -78,6 +81,7 @@ export class InMemoryTransactions implements TransactionRepository {
         if (f.accountId && t.accountId !== f.accountId) return false
         if (f.plannedStatus && t.plannedStatus !== f.plannedStatus) return false
         if (f.type && t.type !== f.type) return false
+        if (f.payeeId && t.payeeId !== f.payeeId) return false
         if (f.search) {
           const hay = `${t.merchant ?? ""} ${t.note ?? ""}`.toLowerCase()
           if (!hay.includes(f.search.toLowerCase())) return false
@@ -94,6 +98,7 @@ export class InMemoryTransactions implements TransactionRepository {
       id: id("tx"),
       transferDirection: null,
       transferGroupId: null,
+      payeeId: null,
       merchant: null,
       note: null,
       plannedStatus: "unplanned",
@@ -103,9 +108,28 @@ export class InMemoryTransactions implements TransactionRepository {
     this.items.push(t)
     return t
   }
+  async createPersonTransfer(input: NewPersonTransfer) {
+    const t: Transaction = {
+      id: id("tx"),
+      accountId: input.accountId,
+      categoryId: null,
+      type: "person_transfer",
+      transferDirection: input.direction,
+      transferGroupId: null,
+      payeeId: input.payeeId,
+      amount: input.amount,
+      occurredAt: input.occurredAt,
+      merchant: null,
+      note: input.note ?? null,
+      plannedStatus: "unplanned",
+      receiptPath: input.receiptPath ?? null,
+    }
+    this.items.push(t)
+    return t
+  }
   async createTransfer(input: NewTransfer) {
     const g = id("grp")
-    const base = { categoryId: null, type: "transfer" as const, transferGroupId: g, merchant: null, plannedStatus: "unplanned" as const, receiptPath: null }
+    const base = { categoryId: null, payeeId: null, type: "transfer" as const, transferGroupId: g, merchant: null, plannedStatus: "unplanned" as const, receiptPath: null }
     this.items.push(
       { id: id("tx"), accountId: input.fromAccountId, transferDirection: "out", amount: input.amount, occurredAt: input.occurredAt, note: input.note ?? null, ...base },
       { id: id("tx"), accountId: input.toAccountId, transferDirection: "in", amount: input.amount, occurredAt: input.occurredAt, note: input.note ?? null, ...base },
@@ -126,6 +150,45 @@ export class InMemoryTransactions implements TransactionRepository {
   }
   async deleteAll() {
     this.items = []
+  }
+}
+
+export class InMemoryPayees implements PayeeRepository {
+  items: Payee[] = []
+  async list() {
+    return [...this.items].reverse()
+  }
+  async getById(i: string) {
+    return this.items.find((p) => p.id === i) ?? null
+  }
+  async findByName(name: string) {
+    return this.items.find((p) => p.name.toLowerCase() === name.toLowerCase()) ?? null
+  }
+  async create(name: string) {
+    const p: Payee = { id: id("pay"), name, isArchived: false }
+    this.items.push(p)
+    return p
+  }
+  async update(i: string, patch: { name?: string; isArchived?: boolean }) {
+    const p = this.items.find((x) => x.id === i)
+    if (!p) return null
+    Object.assign(p, Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined)))
+    return p
+  }
+}
+
+export class InMemoryProofs implements ProofStorage {
+  files = new Map<string, ProofFile>()
+  async upload(file: ProofFile) {
+    const path = `user/${id("proof")}`
+    this.files.set(path, file)
+    return path
+  }
+  async signedUrl(path: string) {
+    return this.files.has(path) ? `https://example.test/${path}` : null
+  }
+  async remove(path: string) {
+    this.files.delete(path)
   }
 }
 
@@ -196,6 +259,8 @@ export function seedWorld() {
   const categories = new InMemoryCategories()
   const transactions = new InMemoryTransactions()
   const budgets = new InMemoryBudgets()
+  const payees = new InMemoryPayees()
+  const proofs = new InMemoryProofs()
   const cash: Account = { id: "cash", name: "Cash", type: "cash", openingBalance: 100_000, isArchived: false }
   const bank: Account = { id: "bank", name: "Bank", type: "bank", openingBalance: 500_000, isArchived: false }
   accounts.items.push(cash, bank)
@@ -203,5 +268,5 @@ export function seedWorld() {
     id: cid, name, type, icon: null, color: null, isDefault: true, isArchived: false,
   })
   categories.items.push(mk("food", "Food", "expense"), mk("transport", "Transport", "expense"), mk("salary", "Salary", "income"))
-  return { accounts, categories, transactions, budgets, cash, bank }
+  return { accounts, categories, transactions, budgets, payees, proofs, cash, bank }
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { SelectField } from "@/components/layout/select-field"
 import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { Search, X } from "lucide-react"
@@ -16,8 +17,6 @@ export interface FilterValues {
   account: string
   planned: string
 }
-
-const selectCls = "tap w-full rounded-md border bg-background px-3 text-sm"
 
 /** URL-driven filters: the server page reads the query string, so results are shareable and back-button friendly. */
 export function TransactionFilters({ values }: { values: FilterValues }) {
@@ -65,29 +64,15 @@ export function TransactionFilters({ values }: { values: FilterValues }) {
       </div>
       <div>
         <Label htmlFor="f-cat" className="text-label">Category</Label>
-        <select id="f-cat" className={`${selectCls} mt-1`} value={v.category} onChange={(e) => set("category", e.target.value, true)}>
-          <option value="">All categories</option>
-          {app.categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}{c.isArchived ? " (archived)" : ""}</option>
-          ))}
-        </select>
+        <SelectField id="f-cat" className="mt-1" value={v.category} onChange={(x) => set("category", x, true)} options={[{ value: "", label: "All categories" }, ...app.categories.map((c) => ({ value: c.id, label: c.name + (c.isArchived ? " (archived)" : "") }))]} />
       </div>
       <div>
         <Label htmlFor="f-acc" className="text-label">Account</Label>
-        <select id="f-acc" className={`${selectCls} mt-1`} value={v.account} onChange={(e) => set("account", e.target.value, true)}>
-          <option value="">All accounts</option>
-          {app.accounts.map((a) => (
-            <option key={a.id} value={a.id}>{a.name}</option>
-          ))}
-        </select>
+        <SelectField id="f-acc" className="mt-1" value={v.account} onChange={(x) => set("account", x, true)} options={[{ value: "", label: "All accounts" }, ...app.accounts.map((a) => ({ value: a.id, label: a.name }))]} />
       </div>
       <div>
         <Label htmlFor="f-pl" className="text-label">Planned?</Label>
-        <select id="f-pl" className={`${selectCls} mt-1`} value={v.planned} onChange={(e) => set("planned", e.target.value, true)}>
-          <option value="">Planned &amp; unplanned</option>
-          <option value="planned">Planned only</option>
-          <option value="unplanned">Unplanned only</option>
-        </select>
+        <SelectField id="f-pl" className="mt-1" value={v.planned} onChange={(x) => set("planned", x, true)} options={[{ value: "", label: "Planned & unplanned" }, { value: "planned", label: "Planned only" }, { value: "unplanned", label: "Unplanned only" }]} />
       </div>
       <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-2">
         <Button type="submit" className="tap">Apply</Button>

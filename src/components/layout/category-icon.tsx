@@ -1,5 +1,14 @@
 import {
   Banknote,
+  Bike,
+  Cigarette,
+  Coffee,
+  GraduationCap,
+  Gift,
+  House,
+  Shirt,
+  Smartphone,
+  Store,
   Bus,
   Clapperboard,
   Ellipsis,
@@ -26,6 +35,15 @@ const ICONS: Record<string, LucideIcon> = {
   banknote: Banknote,
   laptop: Laptop,
   plus: Plus,
+  coffee: Coffee,
+  bike: Bike,
+  cigarette: Cigarette,
+  smartphone: Smartphone,
+  house: House,
+  "graduation-cap": GraduationCap,
+  shirt: Shirt,
+  gift: Gift,
+  store: Store,
 }
 
 export function CategoryIcon({ name, color, className }: { name: string | null; color?: string | null; className?: string }) {

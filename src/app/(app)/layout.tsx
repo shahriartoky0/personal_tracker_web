@@ -3,10 +3,11 @@ import { requireContainer } from "@/shared/infrastructure/container"
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const c = await requireContainer()
-  const [profile, accounts, categories] = await Promise.all([
+  const [profile, accounts, categories, payees] = await Promise.all([
     c.settings.profile.execute(),
     c.accounts.list.execute({ includeArchived: true }),
     c.categories.list.execute({ includeArchived: true }),
+    c.transfers.payees.execute({ includeArchived: true }),
   ])
   return (
     <AppShell
@@ -17,6 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         email: c.email,
         accounts,
         categories,
+        payees,
       }}
     >
       {children}

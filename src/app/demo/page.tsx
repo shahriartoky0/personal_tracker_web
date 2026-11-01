@@ -12,7 +12,7 @@ export default async function DemoPage({ searchParams }: { searchParams: Promise
   const demo = await buildDemo(preset)
   return (
     <AppShell
-      data={{ currency: "BDT", timezone: "Asia/Dhaka", displayName: "Demo", email: "", accounts: demo.accounts, categories: demo.categories, demo: true }}
+      data={{ currency: "BDT", timezone: "Asia/Dhaka", displayName: "Demo", email: "", accounts: demo.accounts, categories: demo.categories, payees: [], demo: true }}
     >
       <div role="note" className="mb-6 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-warning/40 bg-warning-soft p-3 text-sm">
         <span><strong>Demo data.</strong> Everything below is sample data kept in memory — it is not your records and nothing is saved.</span>

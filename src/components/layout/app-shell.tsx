@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, CalendarCheck, LayoutDashboard, List, Plus, Settings, Wallet } from "lucide-react"
+import { ArrowLeftRight, BarChart3, CalendarCheck, LayoutDashboard, List, Plus, Settings, Wallet } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { AppProvider, type AppData } from "@/components/layout/app-context"
@@ -12,6 +12,7 @@ const NAV = [
   { href: "/", label: "Home", icon: LayoutDashboard },
   { href: "/plan", label: "Plan", icon: CalendarCheck },
   { href: "/transactions", label: "History", icon: List },
+  { href: "/transfers", label: "Transfers", icon: ArrowLeftRight },
   { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const
@@ -33,7 +34,7 @@ function Brand() {
 
 function Shell({ children, demo }: { children: React.ReactNode; demo?: boolean }) {
   const path = usePathname()
-  const { openExpense, openIncome } = useQuickAdd()
+  const { openExpense, openIncome, openPersonTransfer } = useQuickAdd()
   const nav = demo ? NAV.slice(0, 1) : NAV
 
   return (
@@ -64,6 +65,9 @@ function Shell({ children, demo }: { children: React.ReactNode; demo?: boolean }
             </Button>
             <Button size="lg" variant="outline" onClick={openIncome} className="tap w-full">
               Add Income
+            </Button>
+            <Button size="lg" variant="ghost" onClick={openPersonTransfer} className="tap w-full">
+              <ArrowLeftRight aria-hidden /> Send / receive money
             </Button>
           </div>
         )}
@@ -102,7 +106,7 @@ function Shell({ children, demo }: { children: React.ReactNode; demo?: boolean }
             href={href}
             aria-current={isActive(path, href) ? "page" : undefined}
             className={cn(
-              "tap flex flex-col items-center justify-center gap-0.5 rounded-md text-[0.6875rem] font-medium text-muted-foreground",
+              "tap flex flex-col items-center justify-center gap-0.5 rounded-md px-0.5 text-[0.6875rem] font-medium text-muted-foreground",
               isActive(path, href) && "text-primary",
             )}
           >

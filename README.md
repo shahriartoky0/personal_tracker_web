@@ -23,8 +23,8 @@ Environment variables (`.env.local`, never committed):
 
 ## Database: migrate and seed
 
-Schema, RLS policies, the signup trigger and the private `receipts` bucket live in
-`supabase/migrations/20261101000000_initial_schema.sql`. Apply it **one** way (don't mix with Table Editor edits):
+Schema, RLS policies, the signup trigger and the private `receipts` bucket live in `supabase/migrations/`.
+Apply the files **in order** (`…000000_initial_schema`, `…010000_more_default_categories`, `…020000_person_transfers`), each **one** way (don't mix with Table Editor edits):
 
 - **Dashboard:** SQL Editor → New query → paste the file → Run.
 - **CLI:** `npx supabase login && npx supabase link --project-ref <project-id> && npx supabase db push`
@@ -91,6 +91,7 @@ use case in `domain/use-cases`, wire it in `shared/infrastructure/container.ts`,
 - Transfers are two linked rows (`transfer_group_id`) created atomically by `create_transfer()`; excluded from income/expense everywhere; deleting one leg removes both.
 - A transaction's day = its instant in the profile timezone. Wall-clock form input is converted using that timezone.
 - CSV export is formula-injection safe, UTF-8 with BOM (opens correctly in Excel).
+- **Transfers to people** (`type = person_transfer`) have a person, a direction (sent/received), an optional proof image and their own tracking page (`/transfers`: period + per-person totals incl. all-time, history, CSV). They change account balances but are **not** expenses/income and don't reduce "Left for today".
 - `/demo` shows sample data from in-memory repositories; it is never written to the database or mixed with real records.
 
 ## Design system
@@ -117,7 +118,7 @@ card lists; ≥1024px: sidebar + tables. Full details in `docs/DESIGN.md`.
 
 ## Known limitations
 
-- Receipt photos: the private `receipts` bucket, policies and `receipt_path` column exist, but the upload UI is not built yet.
+- Proof images are supported on transfers to/from people (compressed in the browser, stored privately). Expense/income receipts reuse the same storage but their form does not offer an upload yet.
 - Reminders: preferences are stored and the budget-threshold alert drives the dashboard status; push/email delivery of time-based reminders is not implemented.
 - Plan saving (budget + allocations) is several sequential statements, not one DB transaction.
 - Authenticated screens were verified through build/type/lint/unit tests and the public routes through browser checks; end-to-end tests of signed-in flows need a confirmed test account (see RLS section).

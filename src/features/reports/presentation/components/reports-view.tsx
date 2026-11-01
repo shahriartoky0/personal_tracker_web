@@ -1,5 +1,6 @@
 "use client"
 
+import { SelectField } from "@/components/layout/select-field"
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -88,7 +89,6 @@ export function ReportsView({
   const [to, setTo] = useState(report?.range.to ?? "")
   const { money } = app
 
-  const select = "tap w-full rounded-md border bg-background px-3 text-sm"
   const go = (extra: Record<string, string>) => router.push(`${path}${qs(filters, extra)}`)
 
   return (
@@ -134,25 +134,15 @@ export function ReportsView({
             </div>
             <div>
               <Label htmlFor="r-cat" className="text-label">Category</Label>
-              <select id="r-cat" className={`${select} mt-1`} value={filters.category} onChange={(e) => go({ category: e.target.value })}>
-                <option value="">All categories</option>
-                {app.categories.filter((c) => c.type === "expense").map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <SelectField id="r-cat" className="mt-1" value={filters.category} onChange={(x) => go({ category: x })} options={[{ value: "", label: "All categories" }, ...app.categories.filter((c) => c.type === "expense").map((c) => ({ value: c.id, label: c.name }))]} />
             </div>
             <div>
               <Label htmlFor="r-acc" className="text-label">Account</Label>
-              <select id="r-acc" className={`${select} mt-1`} value={filters.account} onChange={(e) => go({ account: e.target.value })}>
-                <option value="">All accounts</option>
-                {app.accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-              </select>
+              <SelectField id="r-acc" className="mt-1" value={filters.account} onChange={(x) => go({ account: x })} options={[{ value: "", label: "All accounts" }, ...app.accounts.map((a) => ({ value: a.id, label: a.name }))]} />
             </div>
             <div>
               <Label htmlFor="r-pl" className="text-label">Planned?</Label>
-              <select id="r-pl" className={`${select} mt-1`} value={filters.planned} onChange={(e) => go({ planned: e.target.value })}>
-                <option value="">All spending</option>
-                <option value="planned">Planned only</option>
-                <option value="unplanned">Unplanned only</option>
-              </select>
+              <SelectField id="r-pl" className="mt-1" value={filters.planned} onChange={(x) => go({ planned: x })} options={[{ value: "", label: "All spending" }, { value: "planned", label: "Planned only" }, { value: "unplanned", label: "Unplanned only" }]} />
             </div>
             <div className="flex items-end">
               <Button className="tap w-full" onClick={() => go({ preset: "custom", from, to })} disabled={!from || !to}>Apply dates</Button>
@@ -173,6 +163,16 @@ export function ReportsView({
             <Summary label="Net cash flow" value={money(report.net, { showPlus: true })} tone={report.net < 0 ? "text-destructive" : "text-success"} hint="Income − expenses" />
             <Summary label="Closing balance" value={money(report.closingBalance)} hint={report.transfersExcluded > 0 ? `${money(report.transfersExcluded)} of transfers excluded` : "Transfers excluded"} />
           </section>
+
+          {(report.sentToPeople > 0 || report.receivedFromPeople > 0) && (
+            <div role="note" className="rounded-xl border bg-muted/50 p-4 text-sm">
+              <span className="num">
+                Sent to people <strong>{money(report.sentToPeople)}</strong> · received <strong>{money(report.receivedFromPeople)}</strong>
+              </span>{" "}
+              — not counted as expenses or income, but included in your balances.{" "}
+              {!demo && <Link href="/transfers" className="font-medium underline underline-offset-4">See transfers</Link>}
+            </div>
+          )}
 
           {report.unplannedSpent > 0 && (
             <div role="note" className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning-soft p-4 text-sm">

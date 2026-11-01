@@ -29,8 +29,9 @@ export class SupabaseAuthGateway implements AuthGateway {
   constructor(private readonly db: SupabaseServerClient) {}
 
   async currentUser(): Promise<AuthUser | null> {
-    const { data } = await this.db.auth.getUser()
-    return data.user ? { id: data.user.id, email: data.user.email ?? "" } : null
+    const { data } = await this.db.auth.getClaims()
+    const c = data?.claims
+    return c?.sub ? { id: c.sub, email: typeof c.email === "string" ? c.email : "" } : null
   }
 
   async signUp(input: { email: string; password: string; displayName: string }): Promise<Result<SignUpOutcome>> {

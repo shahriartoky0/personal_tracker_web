@@ -1,5 +1,6 @@
 "use client"
 
+import { SelectField } from "@/components/layout/select-field"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -38,7 +39,6 @@ import {
   updateProfileAction,
 } from "../actions"
 
-const selectCls = "tap w-full rounded-md border bg-background px-3 text-sm"
 const TIMEZONES = ["Asia/Dhaka", "Asia/Kolkata", "Asia/Dubai", "Asia/Singapore", "Europe/London", "America/New_York", "America/Los_Angeles", "UTC"]
 
 function useAct() {
@@ -70,15 +70,11 @@ function ProfileTab() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-1.5">
             <Label htmlFor="cur">Currency</Label>
-            <select id="cur" className={selectCls} value={currency} onChange={(e) => setCurrency(e.target.value)}>
-              {SUPPORTED_CURRENCIES.map((c) => <option key={c}>{c}</option>)}
-            </select>
+            <SelectField id="cur" value={currency} onChange={setCurrency} options={SUPPORTED_CURRENCIES.map((c) => ({ value: c, label: c }))} />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="tz">Timezone</Label>
-            <select id="tz" className={selectCls} value={tz} onChange={(e) => setTz(e.target.value)}>
-              {zones.map((z) => <option key={z}>{z}</option>)}
-            </select>
+            <SelectField id="tz" value={tz} onChange={setTz} options={zones.map((z) => ({ value: z, label: z }))} />
           </div>
         </div>
         <p className="text-caption text-muted-foreground">Your timezone decides which day a transaction belongs to. Changing it re-groups history by the new local days.</p>
@@ -114,9 +110,7 @@ function AccountsTab() {
         <div className="grid gap-3 sm:grid-cols-[1fr_11rem_9rem_auto] sm:items-end">
           <div className="grid gap-1.5"><Label htmlFor="an">New account name</Label><Input id="an" className="tap" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="e.g. bKash" /></div>
           <div className="grid gap-1.5"><Label htmlFor="at">Type</Label>
-            <select id="at" className={selectCls} value={type} onChange={(e) => setType(e.target.value as AccountType)}>
-              {ACCOUNT_TYPES.map((t) => <option key={t} value={t}>{ACCOUNT_TYPE_LABELS[t]}</option>)}
-            </select>
+            <SelectField id="at" value={type} onChange={(v) => setType(v as AccountType)} options={ACCOUNT_TYPES.map((t) => ({ value: t, label: ACCOUNT_TYPE_LABELS[t] }))} />
           </div>
           <div className="grid gap-1.5"><Label htmlFor="ao">Opening balance</Label><Input id="ao" className="num tap" inputMode="decimal" placeholder="0" value={opening} onChange={(e) => setOpening(e.target.value)} /></div>
           <Button className="tap" disabled={pending || !name.trim()} onClick={() => act(async () => { const r = await createAccountAction({ name, type, openingBalance: opening }); if (r.ok) { setName(""); setOpening("") } return r }, "Account added")}>
@@ -158,9 +152,7 @@ function CategoriesTab() {
         <div className="grid gap-3 sm:grid-cols-[1fr_9rem_5rem_auto] sm:items-end">
           <div className="grid gap-1.5"><Label htmlFor="cn">New category</Label><Input id="cn" className="tap" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="e.g. Education" /></div>
           <div className="grid gap-1.5"><Label htmlFor="ct">Type</Label>
-            <select id="ct" className={selectCls} value={type} onChange={(e) => setType(e.target.value as "expense" | "income")}>
-              <option value="expense">Expense</option><option value="income">Income</option>
-            </select>
+            <SelectField id="ct" value={type} onChange={(v) => setType(v as "expense" | "income")} options={[{ value: "expense", label: "Expense" }, { value: "income", label: "Income" }]} />
           </div>
           <div className="grid gap-1.5"><Label htmlFor="cc">Colour</Label><input id="cc" type="color" value={color} onChange={(e) => setColor(e.target.value)} className="tap h-11 w-full cursor-pointer rounded-md border bg-background p-1" /></div>
           <Button className="tap" disabled={pending || !name.trim()} onClick={() => act(async () => { const r = await createCategoryAction({ name, type, color }); if (r.ok) setName(""); return r }, "Category added")}>
@@ -198,9 +190,7 @@ function RemindersTab({ reminders }: { reminders: ReminderPreference[] }) {
               {t !== "budget_threshold" ? (
                 <Input aria-label="Reminder time" type="time" className="tap w-32" value={r.time ?? ""} disabled={!r.enabled || pending} onChange={(e) => save({ ...r, time: e.target.value || null })} />
               ) : (
-                <select aria-label="Alert threshold" className={`${selectCls} w-28`} value={r.thresholdPercent ?? 90} disabled={!r.enabled || pending} onChange={(e) => save({ ...r, thresholdPercent: Number(e.target.value) })}>
-                  {THRESHOLD_OPTIONS.map((p) => <option key={p} value={p}>{p}%</option>)}
-                </select>
+                <SelectField label="Alert threshold" className="w-28" value={String(r.thresholdPercent ?? 90)} disabled={!r.enabled || pending} onChange={(v) => save({ ...r, thresholdPercent: Number(v) })} options={THRESHOLD_OPTIONS.map((p) => ({ value: String(p), label: p + "%" }))} />
               )}
               <Switch id={`r-${t}`} checked={r.enabled} disabled={pending} onCheckedChange={(v) => save({ ...r, enabled: v })} />
             </div>

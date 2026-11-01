@@ -6,6 +6,7 @@ export interface TransactionRow {
   type: string
   transfer_direction: string | null
   transfer_group_id: string | null
+  payee_id: string | null
   amount: number
   occurred_at: string
   merchant: string | null

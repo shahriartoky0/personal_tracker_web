@@ -1,5 +1,6 @@
 "use client"
 
+import { SelectField } from "@/components/layout/select-field"
 import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -34,7 +35,7 @@ export function TransactionForm({
 
   const defaults = useMemo<TransactionFormInput>(
     () => ({
-      type: initial && initial.type !== "transfer" ? initial.type : type,
+      type: initial && (initial.type === "income" || initial.type === "expense") ? initial.type : type,
       amount: initial ? toDecimalString(initial.amount, true) : "",
       categoryId: initial?.categoryId ?? "",
       accountId: initial?.accountId ?? app.accounts.find((a) => !a.isArchived)?.id ?? "",
@@ -154,20 +155,13 @@ export function TransactionForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="accountId">{kind === "expense" ? "Paid from" : "Deposit to"}</Label>
-          <select
+          <SelectField
             id="accountId"
-            className="tap w-full rounded-md border bg-background px-3 text-sm"
-            aria-invalid={!!err.accountId}
-            {...register("accountId")}
-          >
-            {app.accounts
-              .filter((a) => !a.isArchived || a.id === initial?.accountId)
-              .map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-          </select>
+            value={watch("accountId")}
+            onChange={(v) => setValue("accountId", v, { shouldValidate: true })}
+            invalid={!!err.accountId}
+            options={app.accounts.filter((a) => !a.isArchived || a.id === initial?.accountId).map((a) => ({ value: a.id, label: a.name }))}
+          />
           {err.accountId && <p role="alert" className="text-caption text-destructive">{err.accountId.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">

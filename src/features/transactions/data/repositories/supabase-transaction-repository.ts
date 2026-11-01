@@ -1,4 +1,5 @@
 import type {
+  NewPersonTransfer,
   NewTransaction,
   NewTransfer,
   TransactionFilter,
@@ -40,6 +41,22 @@ export class SupabaseTransactionRepository implements TransactionRepository {
     )
   }
 
+  async createPersonTransfer(input: NewPersonTransfer) {
+    return toTransaction(
+      await this.ds.insert({
+        user_id: this.userId,
+        account_id: input.accountId,
+        payee_id: input.payeeId,
+        type: "person_transfer",
+        transfer_direction: input.direction,
+        amount: input.amount,
+        occurred_at: input.occurredAt,
+        note: input.note ?? null,
+        receipt_path: input.receiptPath ?? null,
+      }),
+    )
+  }
+
   createTransfer(input: NewTransfer) {
     return this.ds.createTransfer({
       from: input.fromAccountId,
@@ -54,6 +71,8 @@ export class SupabaseTransactionRepository implements TransactionRepository {
     const row = await this.ds.update(id, {
       ...(patch.accountId !== undefined && { account_id: patch.accountId }),
       ...(patch.categoryId !== undefined && { category_id: patch.categoryId }),
+      ...(patch.payeeId !== undefined && { payee_id: patch.payeeId }),
+      ...(patch.transferDirection !== undefined && { transfer_direction: patch.transferDirection }),
       ...(patch.amount !== undefined && { amount: patch.amount }),
       ...(patch.occurredAt !== undefined && { occurred_at: patch.occurredAt }),
       ...(patch.merchant !== undefined && { merchant: patch.merchant }),

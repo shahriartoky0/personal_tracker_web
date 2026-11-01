@@ -1,5 +1,6 @@
 "use client"
 
+import { SelectField } from "@/components/layout/select-field"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -27,7 +28,7 @@ export function TransferForm({ onDone }: { onDone: () => void }) {
       note: "",
     },
   })
-  const { register, handleSubmit, setError, formState } = form
+  const { register, handleSubmit, setError, watch, setValue, formState } = form
   const err = formState.errors
 
   async function onSubmit(values: TransferFormInput) {
@@ -60,13 +61,7 @@ export function TransferForm({ onDone }: { onDone: () => void }) {
         {(["fromAccountId", "toAccountId"] as const).map((f) => (
           <div key={f} className="flex flex-col gap-1.5">
             <Label htmlFor={f}>{f === "fromAccountId" ? "From" : "To"}</Label>
-            <select id={f} className="tap w-full rounded-md border bg-background px-3 text-sm" {...register(f)}>
-              {active.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
+            <SelectField id={f} value={watch(f)} onChange={(v) => setValue(f, v, { shouldValidate: true })} options={active.map((a) => ({ value: a.id, label: a.name }))} />
             {err[f] && <p role="alert" className="text-caption text-destructive">{err[f]?.message}</p>}
           </div>
         ))}

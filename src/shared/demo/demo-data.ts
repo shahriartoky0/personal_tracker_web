@@ -4,7 +4,7 @@ import { GetPeriodReport } from "@/features/reports/domain/use-cases/get-period-
 import { CreateDailyBudget } from "@/features/budgets/domain/use-cases/budget-use-cases"
 import { CreateExpense, CreateIncome } from "@/features/transactions/domain/use-cases/transaction-use-cases"
 import type { Category } from "@/features/categories/domain/entities/category"
-import { InMemoryAccounts, InMemoryBudgets, InMemoryCategories, InMemoryTransactions } from "./in-memory-repositories"
+import { InMemoryAccounts, InMemoryBudgets, InMemoryCategories, InMemoryPayees, InMemoryTransactions } from "./in-memory-repositories"
 
 export const DEMO_TZ = "Asia/Dhaka"
 
@@ -35,7 +35,7 @@ export async function buildDemo(preset: string, now: Date = new Date()) {
   const categories: Category[] = CATS.map(([id, name, icon, color, type]) => ({ id, name, icon, color, type, isDefault: true, isArchived: false }))
   categoriesRepo.items.push(...categories)
 
-  const deps = { transactions, accounts: accountsRepo, categories: categoriesRepo }
+  const deps = { transactions, accounts: accountsRepo, categories: categoriesRepo, payees: new InMemoryPayees() }
   const expense = new CreateExpense(deps)
   const income = new CreateIncome(deps)
   const planDay = new CreateDailyBudget(budgets, categoriesRepo)
