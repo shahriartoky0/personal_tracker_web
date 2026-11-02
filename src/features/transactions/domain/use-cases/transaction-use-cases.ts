@@ -65,7 +65,7 @@ async function createTyped(deps: TransactionDeps, input: NewTransaction): Promis
       ...input,
       merchant: input.merchant?.trim() || null,
       note: input.note?.trim() || null,
-      plannedStatus: input.type === "expense" ? (input.plannedStatus ?? "unplanned") : "unplanned",
+      plannedStatus: input.type === "expense" ? (input.plannedStatus ?? "planned") : "unplanned",
     }),
   )
 }

@@ -3,6 +3,7 @@ import { Inter, Noto_Sans_Bengali } from "next/font/google"
 import { ThemeProvider } from "next-themes"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { SuccessDialog } from "@/components/layout/success-dialog"
 import { ServiceWorkerRegister } from "@/components/layout/sw-register"
 import "./globals.css"
 
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <TooltipProvider delayDuration={150}>{children}</TooltipProvider>
           <Toaster position="top-center" richColors closeButton />
+          <SuccessDialog />
           <ServiceWorkerRegister />
         </ThemeProvider>
       </body>

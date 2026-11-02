@@ -35,7 +35,7 @@ export class SupabaseTransactionRepository implements TransactionRepository {
         occurred_at: input.occurredAt,
         merchant: input.merchant ?? null,
         note: input.note ?? null,
-        planned_status: input.plannedStatus ?? "unplanned",
+        planned_status: input.plannedStatus ?? "planned",
         receipt_path: input.receiptPath ?? null,
       }),
     )

@@ -4,7 +4,7 @@ import { SelectField } from "@/components/layout/select-field"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
+import { notifySuccess } from "@/components/layout/success-dialog"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,7 +35,7 @@ export function TransferForm({ onDone }: { onDone: () => void }) {
     setFormError(null)
     const res = await createTransferAction(values)
     if (res.ok) {
-      toast.success("Transfer recorded — it doesn't count as income or spending")
+      notifySuccess("Transfer recorded — it doesn't count as income or spending")
       onDone()
       return
     }

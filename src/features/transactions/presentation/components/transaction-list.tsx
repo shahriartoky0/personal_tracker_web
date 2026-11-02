@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
+import { notifySuccess } from "@/components/layout/success-dialog"
 import { ArrowLeftRight, Copy, MoreVertical, Pencil, Trash2, UserRound } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -113,7 +114,7 @@ function RowMenu({ t, onDelete }: { t: Transaction; onDelete: (t: Transaction) =
             onSelect={() =>
               start(async () => {
                 const res = await duplicateTransactionAction({ id: t.id, occurredAt: instantToZonedLocal(new Date(), app.timezone) })
-                if (res.ok) toast.success("Duplicated with today's date and time")
+                if (res.ok) notifySuccess("Duplicated with today's date and time")
                 else toast.error(res.message)
               })
             }
@@ -262,7 +263,7 @@ export function TransactionList({
                 if (!id) return
                 start(async () => {
                   const res = await deleteTransactionAction({ id })
-                  if (res.ok) toast.success("Deleted")
+                  if (res.ok) notifySuccess("Deleted")
                   else toast.error(res.message)
                   setToDelete(null)
                 })

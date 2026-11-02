@@ -4,7 +4,7 @@ import { SelectField } from "@/components/layout/select-field"
 import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
+import { notifySuccess } from "@/components/layout/success-dialog"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -40,7 +40,7 @@ export function TransactionForm({
       categoryId: initial?.categoryId ?? "",
       accountId: initial?.accountId ?? app.accounts.find((a) => !a.isArchived)?.id ?? "",
       occurredAt: instantToZonedLocal(initial?.occurredAt ?? new Date(), app.timezone),
-      plannedStatus: initial?.plannedStatus ?? "unplanned",
+      plannedStatus: initial?.plannedStatus ?? "planned",
       merchant: initial?.merchant ?? "",
       note: initial?.note ?? "",
     }),
@@ -64,7 +64,7 @@ export function TransactionForm({
       ? await updateTransactionAction({ ...values, id: initial.id })
       : await saveTransactionAction(values)
     if (res.ok) {
-      toast.success(kind === "expense" ? (editing ? "Expense updated" : "Expense saved") : editing ? "Income updated" : "Income saved")
+      notifySuccess(kind === "expense" ? (editing ? "Expense updated" : "Expense saved") : editing ? "Income updated" : "Income saved")
       onDone()
       return
     }

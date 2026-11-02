@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { notifySuccess } from "@/components/layout/success-dialog"
 import { CalendarCheck, ChevronLeft, ChevronRight, Copy, LockKeyhole, LockKeyholeOpen, Plus, Save, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -65,7 +66,7 @@ export function PlanView({ date, today, budget, summary, planned }: Props) {
       setError(null)
       const res = await savePlanAction(payload)
       if (res.ok) {
-        toast.success("Plan saved")
+        notifySuccess("Plan saved")
         router.refresh()
       } else {
         setError(res.fieldErrors?.allocations ?? res.fieldErrors?.totalLimit ?? res.message)
@@ -78,7 +79,7 @@ export function PlanView({ date, today, budget, summary, planned }: Props) {
       if (!res.ok || !res.data) return void toast.error(res.ok ? "Nothing to copy" : res.message)
       setLimit(toDecimalString(res.data.totalLimit, true))
       setAlloc(Object.fromEntries(res.data.allocations.map((a) => [a.categoryId, toDecimalString(a.amount, true)])))
-      toast.success(source === "yesterday" ? "Copied yesterday's plan — review and save" : "Template loaded — review and save")
+      notifySuccess(source === "yesterday" ? "Copied yesterday's plan — review and save" : "Template loaded — review and save")
     })
 
   const [pTitle, setPTitle] = useState("")
@@ -93,7 +94,7 @@ export function PlanView({ date, today, budget, summary, planned }: Props) {
       if (res.ok) {
         setPTitle("")
         setPAmount("")
-        toast.success("Planned expense added")
+        notifySuccess("Planned expense added")
         router.refresh()
       } else setPErr(res.fieldErrors ? Object.values(res.fieldErrors)[0] : res.message)
     })
@@ -189,7 +190,7 @@ export function PlanView({ date, today, budget, summary, planned }: Props) {
                 onClick={() =>
                   run(async () => {
                     const res = await saveTemplateAction(payload)
-                    if (res.ok) toast.success("Saved as your daily template")
+                    if (res.ok) notifySuccess("Saved as your daily template")
                     else toast.error(res.message)
                   })
                 }
@@ -249,7 +250,7 @@ export function PlanView({ date, today, budget, summary, planned }: Props) {
                       run(async () => {
                         const res = await closeDayAction({ date, closed: !closed })
                         if (res.ok) {
-                          toast.success(closed ? "Day reopened" : "Day closed — nice work reviewing it")
+                          notifySuccess(closed ? "Day reopened" : "Day closed — nice work reviewing it")
                           router.refresh()
                         } else toast.error(res.message)
                       })

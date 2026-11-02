@@ -13,7 +13,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
   const profile = await c.settings.profile.execute()
   const today = todayIn(profile.timezone)
 
-  const hasAnyFilter = ["q", "from", "to", "category", "account", "planned"].some((k) => one(sp[k]))
+  const hasAnyFilter = ["q", "from", "to", "category", "account", "planned"].some((k) => k in sp)
   const filters = {
     q: one(sp.q),
     // No filters yet: show the current month so the page stays fast and relevant.

@@ -28,7 +28,8 @@ export function TransactionFilters({ values }: { values: FilterValues }) {
 
   const apply = (next: FilterValues) => {
     const p = new URLSearchParams()
-    for (const [k, val] of Object.entries(next)) if (val) p.set(k, val)
+    // from/to are always written (even empty) so "no date limit" is distinct from a first visit.
+    for (const [k, val] of Object.entries(next)) if (val || k === "from" || k === "to") p.set(k, val)
     router.push(`${path}?${p.toString()}`)
   }
   const set = (k: keyof FilterValues, val: string, now = false) => {

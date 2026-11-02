@@ -2,6 +2,7 @@
 
 import { useTransition } from "react"
 import { toast } from "sonner"
+import { notifySuccess } from "@/components/layout/success-dialog"
 import { Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { exportTransactionsAction } from "../actions"
@@ -36,7 +37,7 @@ export function ExportButton({ filters, filename, label = "Export CSV" }: { filt
           a.download = filename
           a.click()
           URL.revokeObjectURL(url)
-          toast.success("Exported")
+          notifySuccess("Exported")
         })
       }
     >

@@ -4,6 +4,7 @@ import { SelectField } from "@/components/layout/select-field"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { notifySuccess } from "@/components/layout/success-dialog"
 import { Archive, ArchiveRestore, LogOut, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -48,7 +49,7 @@ function useAct() {
     start(async () => {
       const res = await fn()
       if (res.ok) {
-        if (ok) toast.success(ok)
+        if (ok) notifySuccess(ok)
         router.refresh()
       } else toast.error(res.message ?? "Something went wrong")
     })

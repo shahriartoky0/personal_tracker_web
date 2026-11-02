@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
+import { notifySuccess } from "@/components/layout/success-dialog"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,7 +68,7 @@ export function PersonTransferForm({ initial, onDone }: { initial?: Transaction;
       : await recordPersonTransferAction(values)
     if (res.ok) {
       saved.current = true
-      toast.success(editing ? "Transfer updated" : direction === "out" ? "Sent money recorded" : "Received money recorded")
+      notifySuccess(editing ? "Transfer updated" : direction === "out" ? "Sent money recorded" : "Received money recorded")
       onDone()
       return
     }
